@@ -5,13 +5,30 @@ import axios from "axios";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+// --- Telegram WebApp Types ---
 interface TelegramUser {
   id: number;
   first_name: string;
+  last_name?: string;
   username?: string;
   photo_url?: string;
 }
 
+interface TelegramWebApp {
+  initDataUnsafe?: {
+    user?: TelegramUser;
+  };
+}
+
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: TelegramWebApp;
+    };
+  }
+}
+
+// --- App User Interface ---
 interface AppUser {
   id: number;
   username: string;
@@ -28,20 +45,18 @@ export default function HomePage() {
   useEffect(() => {
     const init = async () => {
       try {
-        const tg = (window as any).Telegram?.WebApp;
+        const tg = window.Telegram?.WebApp;
         if (!tg || !tg.initDataUnsafe?.user) {
           setError("Please open this mini-app through Telegram.");
           setLoading(false);
           return;
         }
 
-        const tgUser: TelegramUser = tg.initDataUnsafe.user;
+        const tgUser = tg.initDataUnsafe.user!;
         const username = tgUser.username || `tg_${tgUser.id}`;
 
         // create or fetch user from API
-        const { data } = await axios.post(`${API}/api/users`, {
-          username,
-        });
+        const { data } = await axios.post(`${API}/api/users`, { username });
 
         setUser(data);
       } catch (err) {
@@ -77,9 +92,7 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold mb-4">
         Welcome, {user?.username ?? "Guest"}
       </h1>
-      <p className="mb-6 text-lg">
-        Your Teuron Points (TP): {user?.tp ?? 0}
-      </p>
+      <p className="mb-6 text-lg">Your Teuron Points (TP): {user?.tp ?? 0}</p>
 
       <button
         onClick={handleTap}
