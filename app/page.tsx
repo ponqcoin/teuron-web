@@ -5,8 +5,23 @@ import axios from "axios";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+interface TelegramUser {
+  id: number;
+  first_name: string;
+  username?: string;
+  photo_url?: string;
+}
+
+interface AppUser {
+  id: number;
+  username: string;
+  tp: number;
+  taps: number;
+  createdAt: string;
+}
+
 export default function HomePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +35,7 @@ export default function HomePage() {
           return;
         }
 
-        const tgUser = tg.initDataUnsafe.user;
+        const tgUser: TelegramUser = tg.initDataUnsafe.user;
         const username = tgUser.username || `tg_${tgUser.id}`;
 
         // create or fetch user from API
@@ -52,17 +67,24 @@ export default function HomePage() {
     }
   };
 
-  if (loading) return <div className="p-6 text-center text-white">Loading...</div>;
-  if (error) return <div className="p-6 text-center text-red-400">{error}</div>;
+  if (loading)
+    return <div className="p-6 text-center text-white">Loading...</div>;
+  if (error)
+    return <div className="p-6 text-center text-red-400">{error}</div>;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
-      <h1 className="text-3xl font-bold mb-4">Welcome, {user.username}</h1>
-      <p className="mb-6 text-lg">Your Teuron Points (TP): {user.tp}</p>
+      <h1 className="text-3xl font-bold mb-4">
+        Welcome, {user?.username ?? "Guest"}
+      </h1>
+      <p className="mb-6 text-lg">
+        Your Teuron Points (TP): {user?.tp ?? 0}
+      </p>
 
       <button
         onClick={handleTap}
-        className="bg-yellow-400 text-black px-10 py-4 rounded-full text-xl font-semibold shadow-lg hover:scale-105 transition-transform"
+        disabled={!user}
+        className="bg-yellow-400 text-black px-10 py-4 rounded-full text-xl font-semibold shadow-lg hover:scale-105 transition-transform disabled:opacity-50"
       >
         🪙 Tap to Earn
       </button>
